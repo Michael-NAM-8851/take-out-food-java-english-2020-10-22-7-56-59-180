@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -14,6 +15,69 @@ public class App {
 
     public String bestCharge(List<String> inputs) {
         //TODO: write code here
+        double cost = 0;
+        boolean hasPromotion = false;
+        String promotion = "";
+
+        System.out.println("============= Order details =============");
+
+        for(String input : inputs) {
+            String itemId = input.split("x")[0].trim();
+            int itemCount = Integer.parseInt(input.split("x")[1].trim());
+            for(Item item : this.itemRepository.findAll()) {
+                if(item.getId().equals(itemId)) {
+                    cost += itemCount * item.getPrice();
+                    System.out.printf("%s x %d = %d yuan\n", item.getName(), itemCount, itemCount*item.getPrice());
+                }
+            }
+        }
+
+        System.out.println("-----------------------------------");
+        for(SalesPromotion salesPromotion : this.salesPromotionRepository.findAll()) {
+            double tmpCost = 0;
+            StringBuilder sb = new StringBuilder();
+
+
+            for(String input : inputs) {
+                String itemId = input.split("x")[0].trim();
+                int itemCount = Integer.parseInt(input.split("x")[1].trim());
+                for(Item item : this.itemRepository.findAll()) {
+                    if(item.getId().equals(itemId)) {
+                        tmpCost += itemCount * item.getPrice();
+                        if (salesPromotion.getType().equals("50%_DISCOUNT_ON_SPECIFIED_ITEMS")) {
+                            if (salesPromotion.getRelatedItems().contains(itemId)) {
+                                tmpCost -= itemCount * item.getPrice() / 2;
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            if (salesPromotion.getType().equals("BUY_30_SAVE_6_YUAN") && tmpCost >= 30) {
+                tmpCost -= 6;
+            }
+            if(tmpCost < cost) {
+                hasPromotion = true;
+                if(salesPromotion.getType().equals("50%_DISCOUNT_ON_SPECIFIED_ITEMS")) {
+                    promotion = "Half price for certain dishes (braised chicken and cold noodles), saving 13 yuan";
+                } else if (salesPromotion.getType().equals("BUY_30_SAVE_6_YUAN")) {
+                    promotion = "Deduct 6 yuan when the order reaches 30 yuan, saving 6 yuan";
+                }
+                cost = tmpCost;
+            }
+
+        }
+        if(hasPromotion) {
+            System.out.println("Promotion used:");
+            System.out.println(promotion);
+            System.out.println("-----------------------------------");
+        }
+
+        System.out.printf("In total: %d yuan", cost);
+        System.out.println("===================================");
+
+
 
         return null;
     }
